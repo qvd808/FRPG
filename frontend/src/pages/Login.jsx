@@ -1,0 +1,141 @@
+import { useState } from 'react'
+import { useTheme } from '../theme'
+import BrandMark from '../components/BrandMark'
+import TextField from '../components/TextField'
+import SocialButton from '../components/SocialButton'
+import { providers } from '../data/providers'
+import { useHover } from '../hooks/useHover'
+
+/**
+ * Login screen. All behavior is passed in via props so you can wire it to
+ * your backend without touching the markup:
+ *   onSubmit({ email, password })  -> POST to your auth endpoint / Cognito
+ *   onProvider(providerId)         -> kick off OAuth ('google' | 'facebook')
+ *   onForgot(), onSignup()         -> navigation
+ */
+export default function Login({ onSubmit, onProvider, onForgot, onSignup, showSocial = true }) {
+  const { theme: t } = useTheme()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [hovered, hoverBind] = useHover()
+
+  const submit = (e) => {
+    e.preventDefault()
+    if (onSubmit) onSubmit({ email, password })
+  }
+
+  const primaryBtn = {
+    width: '100%',
+    fontFamily: 'inherit',
+    fontSize: 15,
+    fontWeight: 700,
+    color: '#FFFFFF',
+    background: hovered ? t.primaryHover : t.primary,
+    border: 'none',
+    borderRadius: 12,
+    padding: 14,
+    cursor: 'pointer',
+    letterSpacing: '.01em',
+    transition: 'background .15s',
+  }
+
+  const linkBtn = {
+    background: 'none',
+    border: 'none',
+    padding: 0,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    color: t.primary,
+    fontWeight: 600,
+  }
+
+  return (
+    <form onSubmit={submit} style={{ width: '100%', maxWidth: 412 }}>
+      <div
+        style={{
+          background: t.surface,
+          border: `1px solid ${t.border}`,
+          borderRadius: 24,
+          boxShadow: t.cardShadow,
+          padding: 'clamp(26px, 5.5vw, 40px)',
+        }}
+      >
+        <div style={{ marginBottom: 26 }}>
+          <BrandMark showTagline />
+        </div>
+
+        <h1
+          style={{
+            fontFamily: "'Bricolage Grotesque', sans-serif",
+            fontWeight: 700,
+            fontSize: 26,
+            margin: '0 0 4px',
+            letterSpacing: '-.01em',
+            color: t.ink,
+          }}
+        >
+          Welcome back
+        </h1>
+        <p style={{ margin: '0 0 24px', fontSize: 14, color: t.soft }}>Continue your quest to fluency.</p>
+
+        <TextField
+          label="Email"
+          type="email"
+          name="email"
+          placeholder="you@example.com"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <TextField
+          label="Password"
+          type="password"
+          name="password"
+          placeholder="••••••••"
+          autoComplete="current-password"
+          gap={10}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 22 }}>
+          <button type="button" onClick={onForgot} style={{ ...linkBtn, fontSize: 12.5 }}>
+            Forgot password?
+          </button>
+        </div>
+
+        <button type="submit" style={primaryBtn} {...hoverBind}>
+          Log in
+        </button>
+
+        {showSocial && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '22px 0' }}>
+              <span style={{ flex: 1, height: 1, background: t.divider }} />
+              <span style={{ fontSize: 11.5, color: t.faint, letterSpacing: '.04em' }}>or continue with</span>
+              <span style={{ flex: 1, height: 1, background: t.divider }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+              {providers.map((p) => (
+                <SocialButton
+                  key={p.id}
+                  label={p.label}
+                  mark={p.mark}
+                  markSize={p.markSize}
+                  onClick={() => onProvider && onProvider(p.id)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <p style={{ textAlign: 'center', fontSize: 13.5, color: t.soft, margin: '22px 0 0' }}>
+        New adventurer?{' '}
+        <button type="button" onClick={onSignup} style={{ ...linkBtn, fontWeight: 700, fontSize: 13.5 }}>
+          Create an account
+        </button>
+      </p>
+    </form>
+  )
+}

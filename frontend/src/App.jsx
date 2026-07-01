@@ -1,24 +1,88 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { ThemeProvider, useTheme } from './theme'
+import Login from './pages/Login'
+import Landing from './pages/Landing'
+import ThemeToggle from './components/ThemeToggle'
 
-function App() {
-  const [health, setHealth] = useState('checking...')
+// Demo harness: a page shell + a Login/Landing switcher so you can see both
+// screens. In production, replace the switcher with your router (react-router,
+// TanStack Router, etc.) and render <Login /> / <Landing /> per route.
+function Screen() {
+  const { theme: t } = useTheme()
+  const [screen, setScreen] = useState('login')
 
-  useEffect(() => {
-    fetch('/api/health')
-      .then((res) => res.json())
-      .then((data) => setHealth(data.status))
-      .catch(() => setHealth('unreachable'))
-  }, [])
+  const tab = (active) => ({
+    fontFamily: 'inherit',
+    fontSize: 13.5,
+    fontWeight: 700,
+    border: 'none',
+    borderRadius: 999,
+    padding: '8px 20px',
+    cursor: 'pointer',
+    letterSpacing: '.01em',
+    transition: 'background .15s, color .15s',
+    background: active ? t.tabActiveBg : 'transparent',
+    color: active ? t.tabActiveText : t.tabIdle,
+    boxShadow: active ? `0 1px 3px ${t.tabShadow}` : 'none',
+  })
 
   return (
-    <main style={{ fontFamily: 'system-ui, sans-serif', padding: '2rem' }}>
-      <h1>FRPG ⚔️</h1>
-      <p>French learning app, RPG style.</p>
-      <p>
-        Backend health: <strong>{health}</strong>
-      </p>
-    </main>
+    <div
+      style={{
+        position: 'relative',
+        minHeight: '100vh',
+        width: '100%',
+        background: t.page,
+        fontFamily: "'Public Sans', system-ui, sans-serif",
+        color: t.ink,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '20px 16px 48px',
+        transition: 'background .2s, color .2s',
+      }}
+    >
+      <ThemeToggle />
+
+      <div
+        style={{
+          display: 'inline-flex',
+          gap: 4,
+          padding: 4,
+          background: t.tabWrap,
+          border: `1px solid ${t.tabWrapBorder}`,
+          borderRadius: 999,
+          marginBottom: 28,
+        }}
+      >
+        <button type="button" onClick={() => setScreen('login')} style={tab(screen === 'login')}>
+          Login
+        </button>
+        <button type="button" onClick={() => setScreen('landing')} style={tab(screen === 'landing')}>
+          Landing
+        </button>
+      </div>
+
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', margin: 'auto 0' }}>
+        {screen === 'login' ? (
+          <Login
+            onSubmit={(creds) => console.log('login', creds)}
+            onProvider={(id) => console.log('oauth provider', id)}
+            onForgot={() => console.log('forgot password')}
+            onSignup={() => setScreen('login')}
+          />
+        ) : (
+          <Landing onSelectSkill={(skill) => console.log('selected skill', skill.key)} />
+        )}
+      </div>
+    </div>
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <ThemeProvider>
+      <Screen />
+    </ThemeProvider>
+  )
+}
